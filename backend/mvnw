@@ -1,0 +1,18 @@
+#!/bin/sh
+# Bootstrap Maven fixado. Requer Java, curl, tar e sha512sum na primeira execução.
+set -eu
+version=3.9.11
+cache="${MAVEN_USER_HOME:-${HOME}/.m2}/wrapper/dists/apache-maven-$version"
+if [ ! -x "$cache/bin/mvn" ]; then
+  mkdir -p "$(dirname "$cache")"
+  work=$(mktemp -d)
+  trap 'rm -rf "$work"' EXIT HUP INT TERM
+  base="https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/$version/apache-maven-$version-bin.tar.gz"
+  curl --fail --location "$base" -o "$work/maven.tar.gz"
+  curl --fail --location "$base.sha512" -o "$work/checksum"
+  hash=$(tr -d '\n\r ' < "$work/checksum")
+  printf '%s  %s\n' "$hash" "$work/maven.tar.gz" | sha512sum -c -
+  tar -xzf "$work/maven.tar.gz" -C "$work"
+  mv "$work/apache-maven-$version" "$cache"
+fi
+exec "$cache/bin/mvn" "$@"

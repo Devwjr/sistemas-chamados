@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+**/target/
+**/node_modules/
+**/dist/
+**/coverage/
+**/.vite/
+*.log
+.idea/
+.vscode/
+.DS_Store
+playwright-report/
+test-results/
