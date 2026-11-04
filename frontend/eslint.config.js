@@ -7,8 +7,11 @@ export default tseslint.config(
   { ignores: ['dist', 'node_modules'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  { files: ['**/*.{ts,tsx}'], languageOptions: { globals: globals.browser },
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: { globals: globals.browser },
     plugins: { 'react-hooks': hooks, 'react-refresh': refresh },
-    rules: { ...hooks.configs.recommended.rules, 'react-refresh/only-export-components': 'off' } },
+    rules: { ...hooks.configs.recommended.rules, 'react-refresh/only-export-components': 'off' },
+  },
   { files: ['*.js'], languageOptions: { globals: globals.node } },
 );

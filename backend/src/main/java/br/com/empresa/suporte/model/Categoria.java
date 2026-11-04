@@ -1,13 +1,27 @@
 package br.com.empresa.suporte.model;
+
 import jakarta.persistence.*;
+
 import java.time.Instant;
 
-@Entity @Table(name="categorias")
+@Entity
+@Table(name = "categorias")
 public class Categoria {
-    @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;
-    @Column(nullable=false, length=100) public String nome;
-    @Column(length=500) public String descricao;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
+
+    @Column(nullable = false, length = 100)
+    public String nome;
+
+    @Column(length = 500)
+    public String descricao;
+
     public boolean ativo = true;
-    @Column(name="criado_em", nullable=false) public Instant criadoEm = Instant.now();
-    @Column(name="atualizado_em", nullable=false) public Instant atualizadoEm = Instant.now();
+
+    @Column(name = "criado_em", nullable = false)
+    public Instant criadoEm = Instant.now();
+
+    @Column(name = "atualizado_em", nullable = false)
+    public Instant atualizadoEm = Instant.now();
 }
