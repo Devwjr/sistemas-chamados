@@ -50,7 +50,7 @@ public class ChamadoService {
     }
 
     private Chamado load(Long id, Usuario u) {
-        var c = chamados.findById(id).orElseThrow(ApiException::notFound);
+        var c = chamados.findDetalheById(id).orElseThrow(ApiException::notFound);
         if (!Workflow.ti(u.perfil) && !c.solicitante.id.equals(u.id)) throw ApiException.notFound();
         return c;
     }
