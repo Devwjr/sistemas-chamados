@@ -1,0 +1,41 @@
+.ticket-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  width: 100%;
+  padding: 20px 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.ticket-summary > div:first-child { display: grid; gap: 6px; }
+.ticket-summary:hover strong { color: var(--green, #347a57); }
+.detail-panel { margin-top: 24px; }
+.detail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0; }
+.detail-actions form { display: flex; flex-wrap: wrap; gap: 8px; }
+.detail-actions input, .detail-actions select, .detail-actions textarea { min-width: 190px; }
+.detail-actions textarea { min-height: 72px; }
+.conversation { display: grid; gap: 10px; }
+.conversation > p, .history-list li { padding: 12px; border-radius: 10px; background: #f5f7f5; }
+.conversation small, .history-list small { display: block; margin-top: 6px; color: #68736c; }
+.history-list { display: grid; gap: 8px; padding-left: 22px; }
+.admin-panel { margin-top: 28px; }
+.admin-tabs { justify-content: flex-start; margin: 20px 0; }
+.admin-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; }
+.admin-form h3, .admin-form .form-actions { grid-column: 1 / -1; }
+.admin-form label { display: grid; gap: 7px; }
+.admin-form input, .admin-form select, .admin-form textarea { width: 100%; }
+.admin-list { display: grid; }
+.admin-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 4px; border-bottom: 1px solid var(--line); }
+.admin-row > div:first-child { display: grid; gap: 5px; }
+.admin-row small { color: var(--muted); }
+.admin-row > div:last-child { display: flex; gap: 8px; }
+@media (max-width: 640px) {
+  .ticket-summary { grid-template-columns: 1fr; gap: 12px; }
+  .detail-actions, .detail-actions form { align-items: stretch; flex-direction: column; }
+  .detail-actions input, .detail-actions select, .detail-actions textarea { width: 100%; }
+  .admin-form { grid-template-columns: 1fr; }
+  .admin-row { align-items: flex-start; flex-direction: column; }
+  .admin-row > div:last-child { flex-wrap: wrap; }
+}

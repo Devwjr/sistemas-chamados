@@ -26,7 +26,9 @@ import '@fontsource/manrope/latin-600.css';
 import '@fontsource/manrope/latin-700.css';
 import '@fontsource/manrope/latin-800.css';
 import './style.css';
-type User = { nome: string; trocaSenhaObrigatoria: boolean };
+import './operations.css';
+import { AdminPanel } from './AdminPanel';
+type User = { id: number; nome: string; perfil: 'SOLICITANTE' | 'TECNICO' | 'ADMIN'; trocaSenhaObrigatoria: boolean };
 type Ref = { id: number; nome: string };
 type Dashboard = { total: number; porStatus: Record<string, number>; semResponsavel: number };
 const statuses: Record<string, string> = {
@@ -47,8 +49,15 @@ type Ticket = {
   categoria: Ref;
   responsavel: Ref | null;
   criadoEm: string;
+  versao: number;
+  impacto: string;
+  solucao: string | null;
+  solicitante: Ref;
+  setorOrigem: Ref;
 };
 type Page<T> = { items: T[]; totalPages: number };
+type Comment = { id: number; autor: Ref; conteudo: string; visibilidade: 'PUBLICO' | 'INTERNO'; criadoEm: string };
+type HistoryEvent = { id: number; autor: Ref; tipoEvento: string; valorAnterior: string | null; valorNovo: string | null; justificativa: string | null; criadoEm: string };
 async function api<T>(path: string, method = 'GET', body?: object | URLSearchParams): Promise<T> {
   const headers = new Headers();
   if (method !== 'GET') {
@@ -85,7 +94,14 @@ function App() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [creating, setCreating] = useState(false);
+  const [administration, setAdministration] = useState(false);
   const [notice, setNotice] = useState('');
+  const [selected, setSelected] = useState<Ticket | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [history, setHistory] = useState<HistoryEvent[]>([]);
+  const [agents, setAgents] = useState<Ref[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
   async function load(index = 0, query = '', filter = '') {
     const params = new URLSearchParams({ page: String(index), busca: query });
     if (filter) params.set('status', filter);
@@ -137,6 +153,42 @@ function App() {
       setBusy(false);
     }
   }
+  async function openTicket(id: number) {
+    setDetailLoading(true);
+    setDetailError('');
+    try {
+      const [detail, commentPage, historyPage] = await Promise.all([
+        api<Ticket>(`/chamados/${id}`),
+        api<Page<Comment>>(`/chamados/${id}/comentarios?size=100`),
+        api<Page<HistoryEvent>>(`/chamados/${id}/historico?size=100`),
+      ]);
+      setSelected(detail);
+      setComments(commentPage.items);
+      setHistory(historyPage.items);
+      if (user?.perfil === 'ADMIN') {
+        const eligible = await api<Page<Ref>>('/usuarios/elegiveis-atendimento?size=100');
+        setAgents(eligible.items);
+      }
+    } catch (e) {
+      setDetailError(e instanceof Error ? e.message : 'Não foi possível abrir o chamado.');
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+  async function mutateTicket(path: string, method: string, body: object) {
+    if (!selected) return;
+    setBusy(true);
+    setDetailError('');
+    try {
+      await api(`/chamados/${selected.id}${path}`, method, { ...body, versao: selected.versao });
+      await openTicket(selected.id);
+      await load(page, search, status);
+    } catch (e) {
+      setDetailError(e instanceof Error ? e.message : 'Não foi possível atualizar o chamado.');
+    } finally {
+      setBusy(false);
+    }
+  }
   if (loading)
     return (
       <main className="loading">
@@ -166,23 +218,24 @@ function App() {
           </div>
           <span className="nav-caption">PRINCIPAL</span>
           <nav className="side-nav">
-            <button className={!creating ? 'active' : ''} onClick={() => setCreating(false)}>
+            <button className={!creating && !administration ? 'active' : ''} onClick={() => { setCreating(false); setAdministration(false); }}>
               <LayoutDashboard size={19} />
-              Visão geral
+              Chamados
               <span className="nav-dot" />
             </button>
-            <button className={creating ? 'active' : ''} onClick={() => setCreating(true)}>
+            <button className={creating ? 'active' : ''} onClick={() => { setAdministration(false); setCreating(true); }}>
               <Plus size={19} />
               Novo chamado
               <ArrowUpRight size={15} />
             </button>
+            {user.perfil === 'ADMIN' && <button className={administration ? 'active' : ''} onClick={() => { setCreating(false); setAdministration(true); }}><ShieldCheck size={19} /> Administração</button>}
           </nav>
           <div className="side-help">
             <span className="help-icon">
               <Headphones size={21} />
             </span>
-            <h3>Conte com a gente.</h3>
-            <p>Descreva o que aconteceu e nossa equipe acompanha com você.</p>
+            <h3>Precisa de atendimento?</h3>
+            <p>Registre o problema, a categoria e quem foi afetado.</p>
             <button onClick={() => setCreating(true)}>
               Solicitar suporte <ArrowUpRight size={16} />
             </button>
@@ -206,10 +259,11 @@ function App() {
             Núcleo
           </a>
           <div>
-            <span className="story-label">MENOS IMPREVISTOS. MAIS FLUIDEZ.</span>
+            <span className="story-label">NÚCLEO / CENTRAL INTERNA</span>
             <h1>
-              Seu trabalho flui.
-              <br />O suporte cuida.
+              Problema registrado.
+              <br />
+              Próximo passo, solução.
             </h1>
             <p>Um lugar para pedir ajuda, acompanhar soluções e seguir em frente.</p>
             <div className="story-card">
@@ -274,9 +328,9 @@ function App() {
         )}
         {!user ? (
           <section className="login">
-            <span className="section-label">BOM TER VOCÊ POR AQUI</span>
+            <span className="section-label">ACESSO À CENTRAL</span>
             <h2>Entre na sua conta.</h2>
-            <p className="muted">Seu próximo passo começa com uma solução.</p>
+            <p className="muted">Acesse seus chamados com o e-mail da empresa.</p>
             <form
               onSubmit={(e) =>
                 void submit(e, async (data) => {
@@ -349,19 +403,21 @@ function App() {
               <button disabled={busy}>Salvar senha</button>
             </form>
           </section>
+        ) : administration && user.perfil === 'ADMIN' ? (
+          <AdminPanel onError={setError} />
         ) : (
           <>
             <div className="page-heading">
               <div>
-                <span className="section-label">SEU DIA, MAIS ORGANIZADO</span>
+                <span className="section-label">OPERAÇÃO / SUPORTE INTERNO</span>
                 <h1>
-                  {creating ? 'Como podemos ajudar?' : 'Visão geral'}
+                  {creating ? 'Como podemos ajudar?' : 'Fila de chamados'}
                   <span className="green-dot">.</span>
                 </h1>
                 <p className="muted">
                   {creating
                     ? 'Conte o que aconteceu. Vamos encontrar uma solução juntos.'
-                    : `Olá, ${user.nome.split(' ')[0]}. Acompanhe o que está acontecendo no suporte.`}
+                    : `Olá, ${user.nome.split(' ')[0]}. Consulte solicitações e acompanhe o atendimento.`}
                 </p>
               </div>
               <button
@@ -404,7 +460,7 @@ function App() {
                     </span>
                     <span>Em atendimento</span>
                     <strong>{dashboard?.porStatus.EM_ATENDIMENTO ?? '—'}</strong>
-                    <small>Nossa equipe está trabalhando</small>
+                    <small>Com atendimento iniciado</small>
                   </div>
                   <div className="stat">
                     <span className="stat-icon green">
@@ -416,14 +472,14 @@ function App() {
                         ? (dashboard.porStatus.RESOLVIDO ?? 0) + (dashboard.porStatus.FECHADO ?? 0)
                         : '—'}
                     </strong>
-                    <small>Soluções que fizeram a diferença</small>
+                    <small>Resolvidos e fechados</small>
                   </div>
                 </div>
                 <section className="ticket-panel">
                   <div className="panel-heading">
                     <div>
                       <h2>Seus chamados</h2>
-                      <p className="muted">Cada solicitação, do começo à solução.</p>
+                      <p className="muted">Abra um registro para consultar os detalhes.</p>
                     </div>
                     <span className="live-label">
                       <span /> Acompanhamento
@@ -440,7 +496,7 @@ function App() {
                       <Search size={18} />
                       <input
                         aria-label="Buscar chamados"
-                        placeholder="Buscar por título ou descrição…"
+                        placeholder="Buscar por título ou protocolo…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                       />
@@ -479,7 +535,9 @@ function App() {
                         <Ticket size={30} />
                       </span>
                       <h3>
-                        {search || status ? 'Nenhum resultado por aqui' : 'Tudo tranquilo por aqui'}
+                        {search || status
+                          ? 'Nenhum resultado por aqui'
+                          : 'Nenhum chamado registrado'}
                       </h3>
                       <p>
                         {search || status
@@ -502,8 +560,8 @@ function App() {
                     </div>
                   )}
                   {tickets.map((t) => (
-                    <details className="ticket-row" key={t.id}>
-                      <summary>
+                    <article className="ticket-row" key={t.id}>
+                      <button className="ticket-summary" onClick={() => void openTicket(t.id)}>
                         <div>
                           <span className="protocol">{t.protocolo}</span>
                           <strong>{t.titulo}</strong>
@@ -521,15 +579,8 @@ function App() {
                           </span>
                           <ChevronRight size={16} />
                         </div>
-                      </summary>
-                      <div className="ticket-detail">
-                        <span className="section-label">DESCRIÇÃO</span>
-                        <p className="description">{t.descricao}</p>
-                        <p className="muted">
-                          Responsável: {t.responsavel?.nome || 'Aguardando atribuição'}
-                        </p>
-                      </div>
-                    </details>
+                      </button>
+                    </article>
                   ))}
                   <nav className="pagination" aria-label="Páginas de chamados">
                     <span>
@@ -559,8 +610,48 @@ function App() {
                     </div>
                   </nav>
                 </section>
+                {(detailLoading || selected || detailError) && (
+                  <section className="ticket-panel detail-panel" aria-label="Detalhe do chamado">
+                    <div className="panel-heading">
+                      <div>
+                        <span className="section-label">DETALHES E ATENDIMENTO</span>
+                        <h2>{selected ? `${selected.protocolo} · ${selected.titulo}` : 'Carregando chamado…'}</h2>
+                      </div>
+                      <button className="secondary" onClick={() => setSelected(null)}>Fechar</button>
+                    </div>
+                    {detailError && <p role="alert" className="error">{detailError}</p>}
+                    {selected && <>
+                      <p className="description">{selected.descricao}</p>
+                      <p className="muted">Solicitante: {selected.solicitante?.nome ?? '—'} · Setor: {selected.setorOrigem?.nome ?? '—'} · Responsável: {selected.responsavel?.nome ?? 'Sem responsável'}</p>
+                      {(user.perfil === 'ADMIN' || selected.responsavel?.id === user.id) && <div className="detail-actions">
+                        {selected.status === 'ABERTO' && !selected.responsavel && <button disabled={busy} onClick={() => void mutateTicket('/assumir', 'POST', {})}>Assumir chamado</button>}
+                        {user.perfil === 'ADMIN' && <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/responsavel', 'PATCH', { responsavelId: Number(data.get('responsavelId')) }); }}>
+                          <select name="responsavelId" defaultValue={selected.responsavel?.id ?? ''} required><option value="">Atribuir responsável</option>{agents.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}</select><button disabled={busy}>Atribuir</button>
+                        </form>}
+                        <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/classificacao', 'PATCH', { prioridade: data.get('prioridade') }); }}>
+                          <select name="prioridade" defaultValue={selected.prioridade}><option value="BAIXA">Baixa</option><option value="MEDIA">Média</option><option value="ALTA">Alta</option><option value="CRITICA">Crítica</option></select><button disabled={busy}>Salvar prioridade</button>
+                        </form>
+                        {selected.status === 'EM_ATENDIMENTO' && <>
+                          <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'AGUARDANDO_USUARIO', mensagemPublica: data.get('mensagemPublica') }); }}><input name="mensagemPublica" minLength={10} placeholder="O que falta para continuar?" required /><button disabled={busy}>Aguardar usuário</button></form>
+                          <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'RESOLVIDO', solucao: data.get('solucao') }); }}><input name="solucao" minLength={10} placeholder="Resumo da solução" required /><button disabled={busy}>Resolver</button></form>
+                        </>}
+                        {selected.status === 'AGUARDANDO_USUARIO' && <button disabled={busy} onClick={() => void mutateTicket('/transicoes', 'POST', { destino: 'EM_ATENDIMENTO' })}>Retomar atendimento</button>}
+                      </div>}
+                      {selected.status === 'RESOLVIDO' && (user.perfil === 'ADMIN' || user.id === selected.solicitante?.id) && <div className="detail-actions">
+                        <button disabled={busy} onClick={() => void mutateTicket('/transicoes', 'POST', { destino: 'FECHADO' })}>Confirmar e fechar</button>
+                        <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'EM_ATENDIMENTO', justificativa: data.get('justificativa') }); }}><input name="justificativa" minLength={10} placeholder="Motivo para reabrir" required /><button disabled={busy}>Solicitar reabertura</button></form>
+                      </div>}
+                      {(selected.status === 'ABERTO' && (user.perfil === 'ADMIN' || user.id === selected.solicitante?.id) || ['EM_ATENDIMENTO', 'AGUARDANDO_USUARIO'].includes(selected.status) && user.perfil === 'ADMIN') && <form className="detail-actions" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'CANCELADO', justificativa: data.get('justificativa') }); }}><input name="justificativa" minLength={10} placeholder="Motivo do cancelamento" required /><button className="secondary" disabled={busy}>Cancelar chamado</button></form>}
+                      {selected.solucao && <p><strong>Solução registrada:</strong> {selected.solucao}</p>}
+                      <h3>Conversa</h3>
+                      <div className="conversation">{comments.map((c) => <p key={c.id}><strong>{c.autor.nome}</strong> {c.visibilidade === 'INTERNO' && <span className="badge">Nota interna</span>}<br />{c.conteudo}<small>{new Date(c.criadoEm).toLocaleString('pt-BR')}</small></p>)}</div>
+                      {!['FECHADO', 'CANCELADO'].includes(selected.status) && <form className="detail-actions" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/comentarios', 'POST', { conteudo: data.get('conteudo'), visibilidade: data.get('visibilidade') }); e.currentTarget.reset(); }}><textarea name="conteudo" minLength={1} maxLength={5000} placeholder="Escreva uma mensagem" required /><select name="visibilidade"><option value="PUBLICO">Mensagem pública</option>{user.perfil !== 'SOLICITANTE' && <option value="INTERNO">Nota interna</option>}</select><button disabled={busy}>Enviar mensagem</button></form>}
+                      <h3>Histórico</h3><ol className="history-list">{history.map((h) => <li key={h.id}><strong>{h.tipoEvento}</strong>: {h.valorAnterior ?? '—'} → {h.valorNovo ?? '—'}{h.justificativa ? ` · ${h.justificativa}` : ''}<small>{h.autor.nome} · {new Date(h.criadoEm).toLocaleString('pt-BR')}</small></li>)}</ol>
+                    </>}
+                  </section>
+                )}
                 <div className="bottom-note">
-                  <Leaf size={15} /> Pequenos pedidos. Grandes soluções.
+                  <Leaf size={15} /> Núcleo / Central interna de suporte
                 </div>
               </>
             ) : (
@@ -572,7 +663,7 @@ function App() {
                     </span>
                     <div>
                       <h2>Nova solicitação</h2>
-                      <p className="muted">Quanto mais detalhes, melhor podemos ajudar.</p>
+                      <p className="muted">Preencha os dados para iniciar o atendimento.</p>
                     </div>
                   </div>
                   <form
@@ -656,11 +747,8 @@ function App() {
                   </form>
                 </section>
                 <aside className="tips">
-                  <span className="section-label">UM BOM COMEÇO</span>
-                  <h2>
-                    Os detalhes fazem
-                    <br />a diferença.
-                  </h2>
+                  <span className="section-label">ORIENTAÇÕES</span>
+                  <h2>Antes de enviar.</h2>
                   <p>Uma descrição clara ajuda nossa equipe a chegar mais rápido à solução.</p>
                   <ol>
                     <li>Explique o que você precisava fazer.</li>

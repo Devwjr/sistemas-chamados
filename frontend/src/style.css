@@ -1040,3 +1040,710 @@ label small {
     padding: 40px 18px;
   }
 }
+
+/* Direção visual: central operacional, verde profundo e tipografia editorial. */
+:root {
+  --green: #225b41;
+  --dark: #17392b;
+  --muted: #69756b;
+  --line: #d9dfd5;
+  background: #f6f6f0;
+  color: #24392b;
+  font-size: 15px;
+}
+.app-shell {
+  grid-template-columns: 224px minmax(0, 1fr);
+}
+.sidebar {
+  background: #163c2d;
+  color: #e2e9d9;
+  padding: 30px 20px 0;
+  border: 0;
+}
+.sidebar .brand {
+  color: #f4f3dd;
+  font-size: 28px;
+  letter-spacing: -1.6px;
+}
+.sidebar .brand-icon {
+  background: transparent;
+  color: #d6ed9e;
+  border: 1px solid #71967a;
+  border-radius: 0;
+}
+.sidebar .brand small {
+  color: #9ab39b;
+  font-size: 9px;
+  letter-spacing: 3px;
+}
+.workspace {
+  border-color: #ffffff20;
+  line-height: 1.5;
+  font-size: 11px;
+  margin-top: 35px;
+}
+.workspace-icon {
+  border-color: #ffffff30;
+  border-radius: 0;
+  color: #d1e5a6;
+}
+.workspace small,
+.sidebar-footer small {
+  color: #a0b39f;
+}
+.nav-caption {
+  color: #a0b39f;
+  font-size: 9px;
+  padding-left: 0;
+  letter-spacing: 2px;
+}
+.side-nav {
+  gap: 0;
+  margin: 0 -20px;
+}
+.side-nav button {
+  color: #c4d0bc;
+  border-radius: 0;
+  padding: 17px 20px;
+  border-left: 3px solid transparent;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+.side-nav button.active {
+  background: #d8e8ad;
+  color: #193b2b;
+  border-left-color: #eff3dc;
+}
+.side-nav button:hover {
+  background: #2c4c35;
+  color: #fff;
+}
+.side-nav button.active:hover {
+  background: #d8e8ad;
+  color: #193b2b;
+}
+.nav-dot {
+  background: #193b2b;
+}
+.side-help {
+  border: 0;
+  border-top: 1px solid #ffffff25;
+  border-radius: 0;
+  background: transparent;
+  padding: 24px 0 0;
+  margin-bottom: 24px;
+}
+.help-icon {
+  color: #c6de94;
+}
+.side-help p {
+  color: #a0b39f;
+  font-size: 11px;
+}
+.side-help h3 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  color: #e3e8d6;
+}
+.side-help button {
+  border: 1px solid #7b9977;
+  border-radius: 0;
+  background: transparent;
+  color: #e7eace;
+  font-weight: 400;
+  padding: 11px;
+  font-size: 11px;
+}
+.side-help button:hover {
+  background: #294d37;
+}
+.sidebar-footer {
+  border-color: #ffffff25;
+  color: #e0e6d6;
+  padding: 22px 0;
+}
+.sidebar-footer > svg {
+  color: #a8bf92;
+}
+.avatar {
+  border-radius: 0;
+  background: #36573b;
+  color: #deebc6;
+  font-size: 14px;
+}
+.main-content {
+  padding: 0 46px 25px;
+  max-width: 1600px;
+}
+.topbar {
+  min-height: 76px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  border-bottom: 1px solid #bfcbbb;
+  margin-bottom: 44px;
+}
+.breadcrumb {
+  color: #8ca084;
+}
+.topbar .text-button {
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.page-heading {
+  margin-bottom: 40px;
+  align-items: flex-end;
+}
+.page-heading .section-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #567348;
+  margin-bottom: 16px;
+}
+.page-heading h1 {
+  font-size: clamp(35px, 4.4vw, 62px);
+  line-height: 1.08;
+  letter-spacing: -3px;
+  font-weight: 600;
+  margin-bottom: 18px;
+  max-width: 780px;
+}
+.page-heading .green-dot {
+  color: #7e9c52;
+}
+.page-heading p {
+  font-size: 13px;
+  color: #65715f;
+  max-width: 510px;
+}
+button {
+  border-radius: 2px;
+  font-weight: 500;
+  padding: 13px 19px;
+}
+.page-heading > button {
+  margin-bottom: 5px;
+}
+.stats {
+  gap: 0;
+  border-top: 1px solid #adbda5;
+  border-bottom: 1px solid #adbda5;
+  margin-bottom: 42px;
+  background: transparent;
+}
+.stat {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 21px 24px 21px 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 14px;
+  align-items: center;
+}
+.stat + .stat {
+  padding-left: 26px;
+  border-left: 1px solid #d1dacb;
+}
+.stat .stat-icon {
+  display: none;
+}
+.stat > span:not(.stat-icon) {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 11px;
+  margin: 0;
+  color: #536548;
+  align-self: end;
+  padding-bottom: 4px;
+}
+.stat strong {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  font-size: 45px;
+  letter-spacing: -2px;
+  font-weight: 500;
+  line-height: 1;
+  margin: 0;
+  color: #1e4930;
+}
+.stat small {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 9px;
+  color: #83907b;
+  line-height: 1.5;
+  align-self: start;
+}
+.ticket-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+.panel-heading {
+  padding: 0 0 23px;
+}
+.panel-heading h2 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.7px;
+}
+.panel-heading p {
+  font-size: 12px;
+  margin-top: 7px;
+}
+.live-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #628057;
+}
+.live-label > span {
+  background: #7b9c52;
+}
+.filters {
+  padding: 0 0 22px;
+  gap: 12px;
+}
+.search-field {
+  border-color: #c8d2c0;
+  background: #fff;
+  border-radius: 2px;
+  padding-left: 15px;
+}
+.filters select {
+  background: #fff;
+  border-color: #c8d2c0;
+  border-radius: 2px;
+  min-height: 45px;
+  font-size: 11px;
+}
+.filters button {
+  min-height: 45px;
+}
+input,
+textarea,
+select {
+  border-radius: 2px;
+  border-color: #c8d2c0;
+}
+.search-field input {
+  padding: 12px 13px;
+}
+.search-field svg {
+  color: #5e7751;
+}
+.secondary {
+  background: transparent;
+  border-color: #bdcbb5;
+  color: #395533;
+}
+.secondary:hover {
+  background: #eaf0df;
+}
+.list-heading {
+  padding: 13px 18px;
+  background: #e6eadb;
+  border-top: 1px solid #adbda5;
+  border-bottom: 1px solid #bdcbb5;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  color: #526a43;
+}
+.ticket-row {
+  background: transparent;
+  border-bottom: 1px solid #cdd6c4;
+}
+.ticket-row summary {
+  padding: 23px 18px;
+}
+.ticket-row summary:hover {
+  background: #edf0e5;
+}
+.ticket-row summary strong {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 7px 0 9px;
+}
+.protocol {
+  font-size: 10px;
+  font-family: monospace;
+  color: #6e855d;
+}
+.ticket-meta {
+  font-size: 11px;
+  color: #7c8c72;
+}
+.ticket-badges {
+  gap: 20px;
+}
+.badge {
+  border-radius: 2px;
+  font-size: 10px;
+}
+.status-ABERTO {
+  background: #ece7cd;
+  color: #7f712d;
+}
+.priority {
+  text-transform: capitalize;
+  font-size: 11px;
+}
+.ticket-detail {
+  background: #eff2e8;
+  border-top-color: #d3ddc9;
+  padding: 22px 18px;
+}
+.description {
+  font-size: 14px;
+}
+.pagination {
+  padding: 20px 0;
+  font-size: 10px;
+  color: #718666;
+}
+.pagination button {
+  border-radius: 2px;
+  font-size: 11px;
+  padding: 8px 12px;
+}
+.bottom-note {
+  justify-content: flex-start;
+  margin: 36px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid #d4ddcc;
+  letter-spacing: 0.7px;
+  font-size: 9px;
+  text-transform: uppercase;
+  color: #7c9070;
+}
+.bottom-note svg {
+  display: none;
+}
+.empty {
+  padding: 55px 20px;
+}
+.empty-icon {
+  border-radius: 0;
+  background: transparent;
+  color: #7b955f;
+  border: 1px solid #b8c7a9;
+  width: 58px;
+  height: 58px;
+}
+.empty h3 {
+  font-size: 20px;
+  font-weight: 500;
+}
+.empty p {
+  color: #758569;
+}
+.empty button {
+  font-size: 12px;
+}
+.create-panel {
+  border: 1px solid #cdd7c5;
+  border-radius: 0;
+  background: #fff;
+  padding: 30px;
+}
+.form-title .stat-icon {
+  border-radius: 0;
+  background: #e8efdf;
+}
+.form-title {
+  border-color: #d6dfcd;
+}
+.create-layout {
+  gap: 36px;
+}
+.form-title h2 {
+  font-weight: 600;
+}
+.form-grid {
+  gap: 18px;
+}
+.form-actions {
+  border-color: #d6dfcd;
+}
+label {
+  font-size: 12px;
+}
+.tips {
+  border-top: 1px solid #a8ba9a;
+  padding-top: 24px;
+}
+.tips h2 {
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -1px;
+}
+.tips > div {
+  border-radius: 0;
+  background: transparent;
+  border-top: 1px solid #c9d6bf;
+  padding: 20px 0;
+}
+.tips p,
+.tips li {
+  color: #7c8b71;
+}
+.tips .section-label {
+  color: #567348;
+}
+.error,
+.notice {
+  border-radius: 2px;
+}
+.auth-shell {
+  background: #f6f6f0;
+  grid-template-columns: 48% 52%;
+}
+.auth-story {
+  background: #163c2d;
+  padding: 48px 55px;
+}
+.auth-story:after {
+  border-radius: 0;
+  width: 340px;
+  height: 340px;
+  transform: rotate(30deg);
+  bottom: -260px;
+  right: -120px;
+  border-color: #b1ce7a26;
+  box-shadow:
+    0 0 0 60px #b1ce7a08,
+    0 0 0 120px #b1ce7a05;
+}
+.auth-story .brand-icon {
+  border-radius: 0;
+  background: #d3e2a7;
+  color: #21472d;
+}
+.auth-story h1 {
+  font-size: clamp(36px, 4vw, 60px);
+  font-weight: 500;
+  letter-spacing: -2.5px;
+  line-height: 1.12;
+  color: #eff0d9;
+}
+.auth-story > div > p {
+  font-size: 14px;
+  color: #acbfa2;
+  max-width: 350px;
+}
+.story-label {
+  font-size: 9px;
+  color: #c5d997;
+}
+.story-card {
+  border: 0;
+  border-top: 1px solid #ffffff30;
+  border-radius: 0;
+  background: transparent;
+  padding: 24px 0;
+  max-width: 360px;
+  margin-top: 40px;
+}
+.story-card > span {
+  color: #d6e4b6;
+}
+.story-card p {
+  color: #99b18f;
+}
+.auth-story > small {
+  color: #a1ba91;
+}
+.auth-content .topbar {
+  border: 0;
+}
+.login h2 {
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -1.5px;
+}
+.login .section-label {
+  color: #5f7f48;
+}
+.login {
+  margin-top: 100px;
+}
+.login input {
+  background: #fff;
+}
+.login form > button {
+  margin-top: 10px;
+}
+.login > .muted {
+  line-height: 1.8;
+}
+@media (min-width: 1500px) {
+  .main-content {
+    padding-left: 60px;
+    padding-right: 60px;
+  }
+  .stat {
+    padding: 25px 24px 25px 0;
+  }
+  .stat + .stat {
+    padding-left: 28px;
+  }
+}
+@media (max-width: 1100px) {
+  .app-shell {
+    grid-template-columns: 195px minmax(0, 1fr);
+  }
+  .main-content {
+    padding: 0 26px;
+  }
+  .sidebar {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .side-nav {
+    margin: 0 -18px;
+  }
+  .side-nav button {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .stat {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 16px;
+  }
+  .stat + .stat {
+    padding-left: 18px;
+  }
+  .stat strong {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 38px;
+    margin-bottom: 9px;
+  }
+  .stat > span:not(.stat-icon) {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 10px;
+  }
+  .stat small {
+    grid-column: 1;
+    grid-row: 3;
+    font-size: 9px;
+  }
+  .auth-story {
+    padding: 40px 30px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+  .sidebar {
+    padding: 17px 20px;
+  }
+  .sidebar .brand {
+    font-size: 24px;
+  }
+  .side-nav {
+    margin: 0 0 0 auto;
+  }
+  .side-nav button {
+    font-size: 0;
+    padding: 10px 14px;
+    border: 0;
+  }
+  .main-content {
+    padding: 0 19px;
+  }
+  .topbar {
+    margin-bottom: 30px;
+    min-height: 62px;
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+  .page-heading {
+    margin-bottom: 25px;
+    align-items: center;
+  }
+  .page-heading h1 {
+    font-size: 37px;
+    letter-spacing: -1.8px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .page-heading .section-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .page-heading p {
+    font-size: 11px;
+  }
+  .stats {
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 30px;
+    gap: 0;
+  }
+  .stat {
+    padding: 18px 0;
+  }
+  .stat + .stat {
+    padding-left: 20px;
+  }
+  .stat:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid #d1dacb;
+  }
+  .stat:nth-child(4) {
+    border-top: 1px solid #d1dacb;
+  }
+  .stat strong {
+    font-size: 37px;
+  }
+  .stat > span:not(.stat-icon) {
+    font-size: 11px;
+  }
+  .panel-heading {
+    padding-bottom: 20px;
+  }
+  .panel-heading h2 {
+    font-size: 21px;
+  }
+  .filters {
+    padding: 0 0 18px;
+  }
+  .ticket-row summary {
+    padding: 20px 6px;
+  }
+  .list-heading {
+    padding-left: 8px;
+  }
+  .ticket-row summary strong {
+    font-size: 15px;
+  }
+  .ticket-badges {
+    gap: 13px;
+  }
+  .pagination {
+    padding: 18px 0;
+  }
+  .create-panel {
+    padding: 22px 18px;
+  }
+  .auth-shell {
+    display: block;
+  }
+  .auth-story {
+    padding: 23px;
+  }
+  .login {
+    margin-top: 45px;
+  }
+  .login h2 {
+    font-size: 31px;
+  }
+}
