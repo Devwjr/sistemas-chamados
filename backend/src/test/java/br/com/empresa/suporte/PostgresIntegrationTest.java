@@ -10,24 +10,29 @@ import br.com.empresa.suporte.repository.CategoriaRepository;
 import br.com.empresa.suporte.repository.UsuarioRepository;
 
 import org.hibernate.Hibernate;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.OptimisticLockException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@Transactional
 @EnabledIfEnvironmentVariable(named = "RUN_POSTGRES_INTEGRATION", matches = "true")
 class PostgresIntegrationTest {
     @Autowired UsuarioRepository users;
     @Autowired CategoriaRepository categories;
     @Autowired ChamadoRepository tickets;
     @Autowired jakarta.persistence.EntityManager entityManager;
+    @Autowired EntityManagerFactory entityManagerFactory;
+    @Autowired PlatformTransactionManager transactionManager;
 
     @Test
+    @Transactional
     void migrationsBootstrapAndTicketQueriesLoadReferences() {
         Usuario admin = users.findByEmail("admin@empresa.local").orElseThrow();
         Categoria category = categories.findAll().getFirst();
@@ -52,21 +57,35 @@ class PostgresIntegrationTest {
 
     @Test
     void optimisticVersionRejectsStaleConcurrentUpdate() {
-        Usuario admin = users.findByEmail("admin@empresa.local").orElseThrow();
-        Chamado ticket = newTicket(admin, categories.findAll().getFirst());
-        tickets.saveAndFlush(ticket);
-        Long id = ticket.id;
-        entityManager.clear();
+        TransactionTemplate transactions = new TransactionTemplate(transactionManager);
+        Long id = transactions.execute(status -> {
+            Usuario admin = users.findByEmail("admin@empresa.local").orElseThrow();
+            Chamado ticket = newTicket(admin, categories.findAll().getFirst());
+            return tickets.saveAndFlush(ticket).id;
+        });
+        assertNotNull(id);
 
-        Chamado first = tickets.findById(id).orElseThrow();
-        entityManager.clear();
-        Chamado stale = tickets.findById(id).orElseThrow();
+        var firstContext = entityManagerFactory.createEntityManager();
+        var staleContext = entityManagerFactory.createEntityManager();
+        try {
+            firstContext.getTransaction().begin();
+            staleContext.getTransaction().begin();
+            Chamado first = firstContext.find(Chamado.class, id);
+            Chamado stale = staleContext.find(Chamado.class, id);
 
-        first.titulo = "Atualização concorrente A";
-        tickets.saveAndFlush(first);
-        stale.titulo = "Atualização concorrente B";
+            first.titulo = "Atualização concorrente A";
+            firstContext.flush();
+            firstContext.getTransaction().commit();
 
-        assertThrows(OptimisticLockingFailureException.class, () -> tickets.saveAndFlush(stale));
+            stale.titulo = "Atualização concorrente B";
+            assertThrows(OptimisticLockException.class, staleContext::flush);
+        } finally {
+            if (staleContext.getTransaction().isActive()) staleContext.getTransaction().rollback();
+            if (firstContext.getTransaction().isActive()) firstContext.getTransaction().rollback();
+            staleContext.close();
+            firstContext.close();
+            transactions.executeWithoutResult(status -> tickets.deleteById(id));
+        }
     }
 
     private Chamado newTicket(Usuario requester, Categoria category) {
