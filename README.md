@@ -95,6 +95,7 @@ cd backend
 ```
 
 Os comandos de teste ainda não cobrem os critérios funcionais: consulte o [checklist manual de permissões e atendimento](docs/07-validacao-manual.md).
+Os testes PostgreSQL de migração, carregamento JPA e versão otimista são ativados na CI. Para executá-los localmente, configure um banco descartável e defina `RUN_POSTGRES_INTEGRATION=true` junto com as variáveis de conexão.
 
 ## Documentação
 
@@ -105,5 +106,6 @@ Os comandos de teste ainda não cobrem os critérios funcionais: consulte o [che
 - [Guia do frontend](docs/04-guia-frontend.md).
 - [Roteiro de desenvolvimento](docs/05-roteiro-de-desenvolvimento.md).
 - [Checklist manual](docs/07-validacao-manual.md).
+- [Preparação para produção, HTTPS e backup](docs/08-producao.md).
 
 Antes de produção, configure HTTPS e gestão segura de segredos, e defina e teste o processo de backup e restauração.
