@@ -1,0 +1,25 @@
+[Unit]
+Description=Núcleo Central de Suporte TI
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=nucleo
+Group=nucleo
+WorkingDirectory=/opt/nucleo
+EnvironmentFile=/etc/nucleo/nucleo.env
+ExecStart=/usr/bin/java -Xms256m -Xmx1024m -jar /opt/nucleo/suporte.jar
+Restart=on-failure
+RestartSec=5
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+LockPersonality=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target
