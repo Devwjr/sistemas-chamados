@@ -1,0 +1,17 @@
+[Unit]
+Description=Backup do PostgreSQL do Núcleo
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=nucleo
+Group=nucleo
+EnvironmentFile=/etc/nucleo/backup.env
+ExecStart=/opt/nucleo/deploy/backup-postgres.sh
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/backups/nucleo
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

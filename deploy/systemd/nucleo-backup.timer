@@ -1,0 +1,11 @@
+[Unit]
+Description=Agendamento diário de backup do PostgreSQL do Núcleo
+
+[Timer]
+OnCalendar=*-*-* 02:15:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=nucleo-backup.service
+
+[Install]
+WantedBy=timers.target
