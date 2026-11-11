@@ -176,7 +176,7 @@ O painel retorna `porStatus`, `porPrioridade`, `semResponsavel` e `total`. `semR
 | GET | `/categorias` | Autenticado; não-admin deve enviar `ativo=true`; admin pode omitir ou usar true/false. |
 | POST | `/categorias` | Admin; cadastro completo. Retorna `201`. |
 | PATCH | `/categorias/{id}` | Admin; cadastro completo. Retorna `200`. |
-| GET | `/setores` | Admin; página de setores. |
+| GET | `/setores` | Técnico ou admin; página de setores para filtros e administração. |
 | POST | `/setores` | Admin; cadastro completo. Retorna `201`. |
 | PATCH | `/setores/{id}` | Admin; cadastro completo. Retorna `200`. |
 | GET | `/usuarios` | Admin; página de usuários. |

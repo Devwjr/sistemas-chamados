@@ -89,6 +89,7 @@ function App() {
   const [error, setError] = useState('');
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [categories, setCategories] = useState<Ref[]>([]);
+  const [sectors, setSectors] = useState<Ref[]>([]);
   const [page, setPage] = useState(0);
   const [pages, setPages] = useState(0);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -130,6 +131,8 @@ function App() {
         if (!current.trocaSenhaObrigatoria && current.perfil !== 'SOLICITANTE') {
           const eligible = await api<Page<Ref>>('/usuarios/elegiveis-atendimento?size=100');
           setAgents(eligible.items);
+          const sectorPage = await api<Page<Ref>>('/setores?size=100');
+          setSectors(sectorPage.items);
         }
       })
       .catch(() => setUser(null))
@@ -550,7 +553,9 @@ function App() {
                       <select aria-label="Filtrar por responsável" value={responsibleFilter} onChange={(e) => setResponsibleFilter(e.target.value)}>
                         <option value="">Todos os responsáveis</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.nome}</option>)}
                       </select>
-                      <label className="date-filter">ID do setor<input aria-label="ID do setor" type="number" min="1" value={sectorFilter} onChange={(e) => setSectorFilter(e.target.value)} /></label>
+                      <select aria-label="Filtrar por setor" value={sectorFilter} onChange={(e) => setSectorFilter(e.target.value)}>
+                        <option value="">Todos os setores</option>{sectors.map((sector) => <option key={sector.id} value={sector.id}>{sector.nome}</option>)}
+                      </select>
                     </>}
                     <button className="secondary" disabled={busy}>
                       Buscar
@@ -677,20 +682,20 @@ function App() {
                           <button disabled={busy}>Salvar classificação</button>
                         </form>
                         {selected.status === 'EM_ATENDIMENTO' && <>
-                          <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'AGUARDANDO_USUARIO', mensagemPublica: data.get('mensagemPublica') }); }}><input name="mensagemPublica" minLength={10} placeholder="O que falta para continuar?" required /><button disabled={busy}>Aguardar usuário</button></form>
-                          <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'RESOLVIDO', solucao: data.get('solucao') }); }}><input name="solucao" minLength={10} placeholder="Resumo da solução" required /><button disabled={busy}>Resolver</button></form>
+                          <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'AGUARDANDO_USUARIO', mensagemPublica: data.get('mensagemPublica') }); }}><input aria-label="Mensagem para o solicitante" name="mensagemPublica" minLength={10} placeholder="O que falta para continuar?" required /><button disabled={busy}>Aguardar usuário</button></form>
+                          <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'RESOLVIDO', solucao: data.get('solucao') }); }}><input aria-label="Resumo da solução" name="solucao" minLength={10} placeholder="Resumo da solução" required /><button disabled={busy}>Resolver</button></form>
                         </>}
                         {selected.status === 'AGUARDANDO_USUARIO' && <button disabled={busy} onClick={() => void mutateTicket('/transicoes', 'POST', { destino: 'EM_ATENDIMENTO' })}>Retomar atendimento</button>}
                       </div>}
                       {selected.status === 'RESOLVIDO' && (user.perfil === 'ADMIN' || user.id === selected.solicitante?.id) && <div className="detail-actions">
                         <button disabled={busy} onClick={() => void mutateTicket('/transicoes', 'POST', { destino: 'FECHADO' })}>Confirmar e fechar</button>
-                        <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'EM_ATENDIMENTO', justificativa: data.get('justificativa') }); }}><input name="justificativa" minLength={10} placeholder="Motivo para reabrir" required /><button disabled={busy}>Solicitar reabertura</button></form>
+                        <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'EM_ATENDIMENTO', justificativa: data.get('justificativa') }); }}><input aria-label="Motivo para reabrir o chamado" name="justificativa" minLength={10} placeholder="Motivo para reabrir" required /><button disabled={busy}>Solicitar reabertura</button></form>
                       </div>}
-                      {(selected.status === 'ABERTO' && (user.perfil === 'ADMIN' || user.id === selected.solicitante?.id) || ['EM_ATENDIMENTO', 'AGUARDANDO_USUARIO'].includes(selected.status) && user.perfil === 'ADMIN') && <form className="detail-actions" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'CANCELADO', justificativa: data.get('justificativa') }); }}><input name="justificativa" minLength={10} placeholder="Motivo do cancelamento" required /><button className="secondary" disabled={busy}>Cancelar chamado</button></form>}
+                      {(selected.status === 'ABERTO' && (user.perfil === 'ADMIN' || user.id === selected.solicitante?.id) || ['EM_ATENDIMENTO', 'AGUARDANDO_USUARIO'].includes(selected.status) && user.perfil === 'ADMIN') && <form className="detail-actions" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'CANCELADO', justificativa: data.get('justificativa') }); }}><input aria-label="Motivo do cancelamento" name="justificativa" minLength={10} placeholder="Motivo do cancelamento" required /><button className="secondary" disabled={busy}>Cancelar chamado</button></form>}
                       {selected.solucao && <p><strong>Solução registrada:</strong> {selected.solucao}</p>}
                       <h3>Conversa</h3>
                       <div className="conversation">{comments.map((c) => <p key={c.id}><strong>{c.autor.nome}</strong> {c.visibilidade === 'INTERNO' && <span className="badge">Nota interna</span>}<br />{c.conteudo}<small>{new Date(c.criadoEm).toLocaleString('pt-BR')}</small></p>)}</div>
-                      {!['FECHADO', 'CANCELADO'].includes(selected.status) && <form className="detail-actions" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/comentarios', 'POST', { conteudo: data.get('conteudo'), visibilidade: data.get('visibilidade') }); e.currentTarget.reset(); }}><textarea name="conteudo" minLength={1} maxLength={5000} placeholder="Escreva uma mensagem" required /><select name="visibilidade"><option value="PUBLICO">Mensagem pública</option>{user.perfil !== 'SOLICITANTE' && <option value="INTERNO">Nota interna</option>}</select><button disabled={busy}>Enviar mensagem</button></form>}
+                      {!['FECHADO', 'CANCELADO'].includes(selected.status) && <form className="detail-actions" onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/comentarios', 'POST', { conteudo: data.get('conteudo'), visibilidade: data.get('visibilidade') }); e.currentTarget.reset(); }}><textarea aria-label="Mensagem ou nota do chamado" name="conteudo" minLength={1} maxLength={5000} placeholder="Escreva uma mensagem" required /><select aria-label="Visibilidade da mensagem" name="visibilidade"><option value="PUBLICO">Mensagem pública</option>{user.perfil !== 'SOLICITANTE' && <option value="INTERNO">Nota interna</option>}</select><button disabled={busy}>Enviar mensagem</button></form>}
                       <h3>Histórico</h3><ol className="history-list">{history.map((h) => <li key={h.id}><strong>{h.tipoEvento}</strong>: {h.valorAnterior ?? '—'} → {h.valorNovo ?? '—'}{h.justificativa ? ` · ${h.justificativa}` : ''}<small>{h.autor.nome} · {new Date(h.criadoEm).toLocaleString('pt-BR')}</small></li>)}</ol>
                     </>}
                   </section>

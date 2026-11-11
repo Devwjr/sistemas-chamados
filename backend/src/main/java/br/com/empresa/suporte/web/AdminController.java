@@ -29,7 +29,7 @@ public class AdminController {
     }
 
     @GetMapping("/setores")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','TECNICO')")
     public Pagina<CadastroView> sectors(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
