@@ -45,6 +45,9 @@ jobs:
               tail -n 180 backend-test.log
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
+            grep -E 'Tests run:|FAILURE|ERROR|Caused by:|expected:|but was:' backend-test.log | tail -n 25 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
             exit 1
           fi
         working-directory: backend
