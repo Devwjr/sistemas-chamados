@@ -4,8 +4,7 @@ Referência dos controllers e serviços atuais. Não há Swagger/OpenAPI configu
 
 ## Endereço e formatos
 
-- Docker: `http://localhost:8088/api`, via Nginx.
-- Backend iniciado diretamente: `http://localhost:8080/api`.
+- Backend iniciado localmente: `http://localhost:8080/api`.
 - Corpos JSON, exceto login (`application/x-www-form-urlencoded`). Campos desconhecidos em JSON são recusados.
 - IDs numéricos; enums em maiúsculas; datas e instantes serializados em ISO 8601.
 - Autenticação por sessão (`JSESSIONID`), sem bearer token.
@@ -224,10 +223,8 @@ O formato padrão usa `detail`, não `message`:
 
 ## Health check
 
-`GET /actuator/health` é público no backend, fora do prefixo `/api`. No Compose, consulte por dentro do container:
+`GET /actuator/health` é público no backend, fora do prefixo `/api`. Com o backend iniciado localmente:
 
 ```bash
-docker compose exec backend wget -qO- http://localhost:8080/actuator/health
+curl http://localhost:8080/actuator/health
 ```
-
-O Nginx atual não encaminha `/actuator/health`; consultar essa URL em `localhost:8088` pode retornar o HTML do frontend e não comprova a saúde do backend.

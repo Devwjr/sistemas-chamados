@@ -199,12 +199,12 @@ Priorizar comportamentos com impacto real:
 1. Testes de serviço para cada transição permitida e recusada.
 2. Testes de segurança para acesso anônimo, perfis e chamado de outro solicitante.
 3. Testes que comprovem ausência de notas internas e hashes nas respostas.
-4. Integração com PostgreSQL para migrações, filtros, paginação e restrições; usar Testcontainers se houver runtime de containers disponível.
+4. Integração com um banco PostgreSQL de teste isolado para migrações, filtros, paginação e restrições.
 5. Teste concorrente de dois técnicos assumindo o mesmo chamado.
 6. Fluxo de sessão: CSRF, login, troca obrigatória, logout e revogação de usuário inativo.
 7. Rollback: se o histórico falhar, a mudança do chamado não pode ficar salva sozinha.
 
-Não depender apenas de H2 para verificar comportamento específico do PostgreSQL. Se containers não estiverem disponíveis, preparar um banco PostgreSQL isolado para testes.
+Não depender apenas de H2 para verificar comportamento específico do PostgreSQL. Configure um banco PostgreSQL isolado para testes e não use dados de desenvolvimento ou produção.
 
 ## 9. Operação
 
