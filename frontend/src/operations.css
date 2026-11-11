@@ -21,6 +21,9 @@
 .conversation small, .history-list small { display: block; margin-top: 6px; color: #68736c; }
 .history-list { display: grid; gap: 8px; padding-left: 22px; }
 .admin-panel { margin-top: 28px; }
+.filters { flex-wrap: wrap; }
+.date-filter { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.date-filter input { min-height: 42px; }
 .admin-tabs { justify-content: flex-start; margin: 20px 0; }
 .admin-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; }
 .admin-form h3, .admin-form .form-actions { grid-column: 1 / -1; }

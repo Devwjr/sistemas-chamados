@@ -28,6 +28,7 @@ import '@fontsource/manrope/latin-800.css';
 import './style.css';
 import './operations.css';
 import { AdminPanel } from './AdminPanel';
+import { buildTicketQuery } from './ticketFilters';
 type User = { id: number; nome: string; perfil: 'SOLICITANTE' | 'TECNICO' | 'ADMIN'; trocaSenhaObrigatoria: boolean };
 type Ref = { id: number; nome: string };
 type Dashboard = { total: number; porStatus: Record<string, number>; semResponsavel: number };
@@ -93,6 +94,12 @@ function App() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [openedFrom, setOpenedFrom] = useState('');
+  const [openedTo, setOpenedTo] = useState('');
+  const [responsibleFilter, setResponsibleFilter] = useState('');
+  const [sectorFilter, setSectorFilter] = useState('');
   const [creating, setCreating] = useState(false);
   const [administration, setAdministration] = useState(false);
   const [notice, setNotice] = useState('');
@@ -102,9 +109,8 @@ function App() {
   const [agents, setAgents] = useState<Ref[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
-  async function load(index = 0, query = '', filter = '') {
-    const params = new URLSearchParams({ page: String(index), busca: query });
-    if (filter) params.set('status', filter);
+  async function load(index = 0, query = '', filter = '', extraFilters: Record<string, string> = {}) {
+    const params = buildTicketQuery(index, query, filter, extraFilters);
     const [list, cats, stats] = await Promise.all([
       api<Page<Ticket>>(`/chamados?${params}`),
       api<Page<Ref>>('/categorias?ativo=true&size=100'),
@@ -121,6 +127,10 @@ function App() {
       .then(async (current) => {
         setUser(current);
         if (!current.trocaSenhaObrigatoria) await load();
+        if (!current.trocaSenhaObrigatoria && current.perfil !== 'SOLICITANTE') {
+          const eligible = await api<Page<Ref>>('/usuarios/elegiveis-atendimento?size=100');
+          setAgents(eligible.items);
+        }
       })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
@@ -146,7 +156,14 @@ function App() {
     setBusy(true);
     setError('');
     try {
-      await load(index, query, filter);
+      await load(index, query, filter, {
+        prioridade: priorityFilter,
+        categoriaId: categoryFilter,
+        de: openedFrom,
+        ate: openedTo,
+        responsavelId: responsibleFilter,
+        setorId: sectorFilter,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível carregar os chamados.');
     } finally {
@@ -182,7 +199,14 @@ function App() {
     try {
       await api(`/chamados/${selected.id}${path}`, method, { ...body, versao: selected.versao });
       await openTicket(selected.id);
-      await load(page, search, status);
+      await load(page, search, status, {
+        prioridade: priorityFilter,
+        categoriaId: categoryFilter,
+        de: openedFrom,
+        ate: openedTo,
+        responsavelId: responsibleFilter,
+        setorId: sectorFilter,
+      });
     } catch (e) {
       setDetailError(e instanceof Error ? e.message : 'Não foi possível atualizar o chamado.');
     } finally {
@@ -504,10 +528,7 @@ function App() {
                     <select
                       aria-label="Filtrar por status"
                       value={status}
-                      onChange={(e) => {
-                        setStatus(e.target.value);
-                        void refresh(0, search, e.target.value);
-                      }}
+                      onChange={(e) => setStatus(e.target.value)}
                     >
                       <option value="">Todos os status</option>
                       {Object.entries(statuses).map(([key, value]) => (
@@ -516,9 +537,29 @@ function App() {
                         </option>
                       ))}
                     </select>
+                    <select aria-label="Filtrar por prioridade" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
+                      <option value="">Todas as prioridades</option>
+                      <option value="BAIXA">Baixa</option><option value="MEDIA">Média</option><option value="ALTA">Alta</option><option value="CRITICA">Crítica</option>
+                    </select>
+                    <select aria-label="Filtrar por categoria" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+                      <option value="">Todas as categorias</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.nome}</option>)}
+                    </select>
+                    <label className="date-filter">De<input aria-label="Data inicial" type="date" value={openedFrom} onChange={(e) => setOpenedFrom(e.target.value)} /></label>
+                    <label className="date-filter">Até<input aria-label="Data final" type="date" value={openedTo} onChange={(e) => setOpenedTo(e.target.value)} /></label>
+                    {user.perfil !== 'SOLICITANTE' && <>
+                      <select aria-label="Filtrar por responsável" value={responsibleFilter} onChange={(e) => setResponsibleFilter(e.target.value)}>
+                        <option value="">Todos os responsáveis</option>{agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.nome}</option>)}
+                      </select>
+                      <label className="date-filter">ID do setor<input aria-label="ID do setor" type="number" min="1" value={sectorFilter} onChange={(e) => setSectorFilter(e.target.value)} /></label>
+                    </>}
                     <button className="secondary" disabled={busy}>
                       Buscar
                     </button>
+                    <button type="button" className="secondary" disabled={busy} onClick={() => {
+                      setSearch(''); setStatus(''); setPriorityFilter(''); setCategoryFilter('');
+                      setOpenedFrom(''); setOpenedTo(''); setResponsibleFilter(''); setSectorFilter('');
+                      void load(0, '', '', {});
+                    }}>Limpar filtros</button>
                   </form>
                   <div className="list-heading">
                     <span>CHAMADO</span>
@@ -535,22 +576,24 @@ function App() {
                         <Ticket size={30} />
                       </span>
                       <h3>
-                        {search || status
+                        {search || status || priorityFilter || categoryFilter || openedFrom || openedTo || responsibleFilter || sectorFilter
                           ? 'Nenhum resultado por aqui'
                           : 'Nenhum chamado registrado'}
                       </h3>
                       <p>
-                        {search || status
+                        {search || status || priorityFilter || categoryFilter || openedFrom || openedTo || responsibleFilter || sectorFilter
                           ? 'Tente outra busca ou selecione um status diferente.'
                           : 'Precisa de uma mão? Abra seu primeiro chamado e acompanhe a solução neste espaço.'}
                       </p>
                       <button
                         className="secondary"
                         onClick={() => {
-                          if (search || status) {
+                          if (search || status || priorityFilter || categoryFilter || openedFrom || openedTo || responsibleFilter || sectorFilter) {
                             setSearch('');
                             setStatus('');
-                            void refresh(0, '', '');
+                            setPriorityFilter(''); setCategoryFilter(''); setOpenedFrom(''); setOpenedTo('');
+                            setResponsibleFilter(''); setSectorFilter('');
+                            void load(0, '', '', {});
                           } else setCreating(true);
                         }}
                       >
@@ -628,8 +671,10 @@ function App() {
                         {user.perfil === 'ADMIN' && <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/responsavel', 'PATCH', { responsavelId: Number(data.get('responsavelId')) }); }}>
                           <select name="responsavelId" defaultValue={selected.responsavel?.id ?? ''} required><option value="">Atribuir responsável</option>{agents.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}</select><button disabled={busy}>Atribuir</button>
                         </form>}
-                        <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/classificacao', 'PATCH', { prioridade: data.get('prioridade') }); }}>
-                          <select name="prioridade" defaultValue={selected.prioridade}><option value="BAIXA">Baixa</option><option value="MEDIA">Média</option><option value="ALTA">Alta</option><option value="CRITICA">Crítica</option></select><button disabled={busy}>Salvar prioridade</button>
+                        <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/classificacao', 'PATCH', { prioridade: data.get('prioridade'), categoriaId: data.get('categoriaId') ? Number(data.get('categoriaId')) : null }); }}>
+                          <select name="prioridade" defaultValue={selected.prioridade}><option value="BAIXA">Baixa</option><option value="MEDIA">Média</option><option value="ALTA">Alta</option><option value="CRITICA">Crítica</option></select>
+                          <select name="categoriaId" defaultValue={selected.categoria.id}><option value={selected.categoria.id}>{selected.categoria.nome} (atual)</option>{categories.filter((category) => category.id !== selected.categoria.id).map((category) => <option key={category.id} value={category.id}>{category.nome}</option>)}</select>
+                          <button disabled={busy}>Salvar classificação</button>
                         </form>
                         {selected.status === 'EM_ATENDIMENTO' && <>
                           <form onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); void mutateTicket('/transicoes', 'POST', { destino: 'AGUARDANDO_USUARIO', mensagemPublica: data.get('mensagemPublica') }); }}><input name="mensagemPublica" minLength={10} placeholder="O que falta para continuar?" required /><button disabled={busy}>Aguardar usuário</button></form>
