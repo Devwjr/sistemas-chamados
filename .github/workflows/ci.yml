@@ -34,7 +34,19 @@ jobs:
           sudo -u postgres psql -c "CREATE ROLE nucleo LOGIN PASSWORD 'ci-test-only-password'"
           sudo -u postgres psql -c "CREATE DATABASE suporte OWNER nucleo"
       - name: Test backend
-        run: ./mvnw -B test
+        run: |
+          if ./mvnw -B test > backend-test.log 2>&1; then
+            cat backend-test.log
+          else
+            cat backend-test.log
+            {
+              echo '## Backend test failure'
+              echo '```text'
+              tail -n 180 backend-test.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
         working-directory: backend
       - name: Test backup and restore scripts
         run: bash deploy/tests/backup-scripts.test.sh
